@@ -1,0 +1,93 @@
+---
+title: "Regression Models Course Project"
+author: "Mohit Shukla"
+date: "Sunday, May 24, 2015"
+output: pdf_document
+---
+
+##### Summary    
+
+This report includes an analysis of mtcars data set which is a collection of cars, main interest of  exploration is to understand the relationship between a set of variables and miles per gallon (MPG) (outcome). Main focus of the analysis is the two following aspects:
+
+* "Is an automatic or manual transmission better for MPG"
+* "Quantify the MPG difference between automatic and manual transmissions"
+
+This analysis may follow many models depending upon the number of covariates being included. Hence A model comparison test is performed to test the relative reliablility of different models. A number of exploratory analysis tasks have been performed to check the validity of models.
+
+The analysis shwoed that all covariates produces more reliable model than single covariate model. Since, a motar car has so many influencing factors other than transmission, so this result seems logical.
+From including two covariates to including all the covariates, results of the model didn't show much difference. Hence **all covariate model has been selected** over all the others assuming that it represents all the other models and dominates the single covariate model.
+
+
+**Analysis of mpg based on factor variable am** 
+
+```{r}
+data(mtcars)
+data <-  mtcars[,c("mpg","am")]
+data[,"am"] <-  as.factor(data[,"am"])
+attach(data)
+summary(mpg[am == 1])
+summary(mpg[am == 0])
+fit <- lm(mpg~am)
+summary(fit)$coef
+
+```
+Above analysis shows dominance of am==1 i.e. Manual transmission. Since the data were coded as 0/1, the coefficient is directly interpreted as the manual (1) - auto (0) difference. In other words, manual on average were 7.245 points greater than auto, a significant difference.
+
+**Analysis of mpg based on all the covariates**
+
+```{r}
+data(mtcars)
+model <- lm(mpg~., data=mtcars)
+summary(model)$coef
+```
+The above model shows that manual transmission on average is `r (summary(model)$coef["am",])[1]` points better than the auto transmission.
+Now this is serious **conflict** between sigle covariate model and all covariate model.
+To decide between these two and all the other available models a model selection test is performed below.
+
+**Model Selection**
+
+```{r}
+
+data(mtcars) 
+fit10 <- lm(mpg~ am, data=mtcars)
+fit9 <- update(fit10, mpg~  cyl + am, data=mtcars)
+fit8 <- update(fit10, mpg~  cyl + disp + am, data=mtcars)
+fit7 <- update(fit10, mpg~  cyl + disp + hp + am, data=mtcars)
+fit6 <- update(fit10, mpg~  cyl + disp + hp + drat + am, data=mtcars)
+fit5 <- update(fit10, mpg~  cyl + disp + hp + drat + wt + am, data=mtcars)
+fit4 <- update(fit10, mpg~  cyl + disp + hp + drat + wt + qsec + am , data=mtcars)
+fit3 <- update(fit10, mpg~  cyl + disp + hp + drat + wt + qsec + vs+ am , data=mtcars)
+fit2 <- update(fit10, mpg~  cyl + disp + hp + drat + wt + qsec + vs+ am + gear, data=mtcars)
+fit1 <- update(fit10, mpg~ cyl + disp + hp + drat + wt + qsec + vs+ am + gear + carb, data=mtcars)
+anova(fit10,fit9,fit8,fit7,fit6,fit5,fit4,fit3,fit2,fit1)
+anova(fit10,fit1)
+```
+The above analysis shows (by looking at Pr>F values )that all the models from model1 to model9 are better off than model10 which includes only one covariate.
+Second result shows the dominance of **all covariates model** over singel covariate model.  
+Hence it is safe to go with model that includes all the covariates i.e. **fit1** model.
+
+**Result**
+
+* coefficients for "am" are: `r summary(fit1)$coef["am",]`
+* Manual Transmission (am==1) is `r (summary(fit1)$coef["am",])[1]` points better than Automatic Transmission i.e. (am==0)           
+
+**Appendix**
+
+```{r echo=FALSE}
+#plot1 <- pairs(mtcars, panel=panel.smooth, main="Plot1: mtcars data", col=3+(mtcars$am==1))
+#mtcars[,9] <- as.factor(mtcars[,9])
+par(mfrow=c(1,1))
+plot2 <- boxplot(list(manual=mpg[am==1], automatic=mpg[am==0]), main = "Plot2: box plot for mpg~am" )
+#plot3 <- plot(am, mpg, main="Plot3: am and mpg", pch=19)
+par(mfrow=c(2,2))
+plot4 <- plot(fit, main = "residual plots for mpg~am")
+par(mfrow=c(2,2))
+plot5 <- plot(fit1, main = "residual plots for mpg~.")
+```
+
+
+
+
+
+
+
